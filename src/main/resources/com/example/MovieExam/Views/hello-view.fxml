@@ -19,7 +19,7 @@
            </padding>
            <VBox prefWidth="200" spacing="5" HBox.hgrow="NEVER">
               <children>
-                  <Label text="Categorys">
+                  <Label text="Categories">
                       <font>
                           <Font name="System Bold" size="13.0" />
                       </font>
@@ -43,9 +43,9 @@
                   <TableView fx:id="tblSongs" prefHeight="576.0" prefWidth="660.0" VBox.vgrow="ALWAYS">
                       <columns>
                           <TableColumn fx:id="colMovieTitle" prefWidth="147.5" text="Title" />
-                          <TableColumn fx:id="colCategory" prefWidth="175.5" text="Category" />
-                          <TableColumn fx:id="coIMDBRating" prefWidth="97.0" text="IMDB Rating" />
-                          <TableColumn fx:id="colPersonalRating" prefWidth="110.5" text="Personal Rating" />
+                          <TableColumn fx:id="colCategory" prefWidth="180.5" text="Category" />
+                          <TableColumn fx:id="coIMDBRating" prefWidth="137.0" text="IMDB Rating" />
+                          <TableColumn fx:id="colPersonalRating" prefWidth="143.5" resizable="false" text="Personal Rating" />
                       </columns>
                   </TableView>
                   <HBox spacing="5" />
