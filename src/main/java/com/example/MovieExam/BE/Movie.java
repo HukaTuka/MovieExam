@@ -1,27 +1,35 @@
 package com.example.MovieExam.BE;
 
+import java.time.LocalDateTime;
+
 public class Movie {
 
     private int id;
-    private String title;
+    private String name;
     private String category;
     private int imdbRating;
     private int personalRating;
+    private String filelink;
+    private LocalDateTime lastViewed;
 
     /**
-     * Constructor for Movie class
+     *
      * @param id
-     * @param title
+     * @param name
      * @param category
      * @param imdbRating
      * @param personalRating
+     * @param filelink
+     * @param lastViewed
      */
-    public Movie(int id, String title, String category, int imdbRating, int personalRating) {
+   public void movie(int id, String name, String category, int imdbRating, int personalRating, String filelink, LocalDateTime lastViewed) {
         this.id = id;
-        this.title = title;
+        this.name = name;
         this.category = category;
         this.imdbRating = imdbRating;
         this.personalRating = personalRating;
+        this.filelink = filelink;
+        this.lastViewed = lastViewed;
     }
 
     public int getId() {
@@ -30,6 +38,22 @@ public class Movie {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public LocalDateTime getLastViewed() {
+        return lastViewed;
+    }
+
+    public void setLastViewed(LocalDateTime lastViewed) {
+        this.lastViewed = lastViewed;
+    }
+
+    public String getFilelink() {
+        return filelink;
+    }
+
+    public void setFilelink(String filelink) {
+        this.filelink = filelink;
     }
 
     public int getPersonalRating() {
@@ -56,17 +80,16 @@ public class Movie {
         this.category = category;
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
-    public String toString()
-    {
-        return id + " " + title + " " + category + " " + imdbRating + " " + personalRating;
+    public String toString() {
+        return id + ": " + name + " | " + category + " | IMDB: " + imdbRating + " | Personal: " + personalRating + " | Last Viewed: " + lastViewed;
     }
 }
