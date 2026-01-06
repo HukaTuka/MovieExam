@@ -13,7 +13,7 @@ public class Movie {
     private LocalDateTime lastViewed;
 
     /**
-     *
+     * Constructor for Movie class
      * @param id
      * @param name
      * @param category
