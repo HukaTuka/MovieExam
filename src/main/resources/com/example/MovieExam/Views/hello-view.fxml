@@ -19,7 +19,7 @@
            </padding>
            <VBox prefWidth="200" spacing="5" HBox.hgrow="NEVER">
               <children>
-                  <Label text="Categorys">
+                  <Label text="Categories">
                       <font>
                           <Font name="System Bold" size="13.0" />
                       </font>
