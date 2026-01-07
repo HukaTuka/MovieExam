@@ -90,8 +90,19 @@ public class MovieDAO implements IMovieDA {
 
     @Override
     public void deleteMovie(int movieId) throws Exception {
+        String sql = "DELETE FROM Movie WHERE id = ?";
 
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, movieId);
+            stmt.executeUpdate();
+
+        } catch (SQLException ex) {
+            throw new Exception("Could not delete movie", ex);
+        }
     }
+
 
     @Override
     public Movie getMovieById(int id) throws SQLException {

@@ -8,19 +8,16 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.time.format.DateTimeFormatter;
-import javafx.scene.control.TableCell;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class HelloController implements Initializable {
@@ -98,21 +95,43 @@ public class HelloController implements Initializable {
     }
 
     public void btnEditMovie(ActionEvent actionEvent) {
-        Movie selectedMovie = tblMovies.getSelectionModel().getSelectedItem();
-        if (selectedMovie != null) {
-            try {
-                movieModel.deleteMovie(selectedMovie, false);
-                refreshMovieList();
-            } catch (Exception e) {
-                showError("Delete Error", "Failed to delete movie: " + e.getMessage());
-            }
-        } else {
-            showError("No Selection", "Please select a movie to delete");
+        Movie selected = tblMovies.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("No Selection", "Please select a movie to edit");
+            return;
         }
+        openMovieWindow(selected);
     }
 
     public void btnDeleteMovie(ActionEvent actionEvent) {
+        Movie selected = tblMovies.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("No Selection", "Please select a movie to delete");
+            return;
+        }
 
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Deletion");
+        confirm.setHeaderText("Delete Movie");
+        confirm.setContentText("Delete: " + selected.getName() + "?");
+
+        ButtonType deleteFile = new ButtonType("Delete File Too");
+        ButtonType deleteLibrary = new ButtonType("Library Only");
+        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        confirm.getButtonTypes().setAll(deleteFile, deleteLibrary, cancel);
+
+        Optional<ButtonType> result = confirm.showAndWait();
+
+        try {
+            if (result.isPresent() && result.get() == deleteFile) {
+                movieModel.deleteMovie(selected, true);
+            } else if (result.isPresent() && result.get() == deleteLibrary) {
+                movieModel.deleteMovie(selected, false);
+            }
+        } catch (Exception ex) {
+            showError("Error", "Failed to delete movie: " + ex.getMessage());
+        }
     }
 
     public void btnWatchMovie(ActionEvent actionEvent) {
@@ -162,5 +181,12 @@ public class HelloController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    private void showWarning(String title, String message) {
+    Alert alert = new Alert(Alert.AlertType.WARNING);
+    alert.setTitle(title);
+    alert.setHeaderText(null);
+    alert.setContentText(message);
+    alert.showAndWait();
     }
 }
