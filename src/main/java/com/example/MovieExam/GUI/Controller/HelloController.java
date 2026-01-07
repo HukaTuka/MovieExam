@@ -2,6 +2,7 @@ package com.example.MovieExam.GUI.Controller;
 
 import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.GUI.Model.MovieModel;
+import com.example.MovieExam.Main;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -80,7 +81,8 @@ public class HelloController implements Initializable {
     }
 
 
-    public void btnAddNewC(ActionEvent actionEvent) {
+    public void btnAddNewC(ActionEvent actionEvent) throws IOException {
+        openCategoryWindow(null);
     }
 
     public void btnEditC(ActionEvent actionEvent) {
@@ -173,6 +175,15 @@ public class HelloController implements Initializable {
             showError("Error", "Failed to open movie window: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    public void openCategoryWindow (ActionEvent actionEvent) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/hello-view.fxml"));
+        Scene scene = new Scene(fxmlLoader.load());
+        Stage stage = new Stage();
+        stage.setTitle("HboFlix");
+        stage.setScene(scene);
+        stage.show();
     }
 
     private void showError(String title, String message) {
