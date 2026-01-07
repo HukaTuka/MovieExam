@@ -4,10 +4,7 @@ import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.DAL.DB.DBConnector;
 import com.example.MovieExam.DAL.Interfaces.IMovieDA;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.List;
 
 public class MovieDAO implements IMovieDA {
@@ -49,5 +46,34 @@ public class MovieDAO implements IMovieDA {
     @Override
     public void deleteMovie(int movieId) throws Exception {
 
+    }
+
+    @Override
+    public Movie getMovieById(int id) throws SQLException {
+        String sql = "SELECT * FROM Movie WHERE id = ?";
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return createMovieFromResultSet(rs);
+            }
+        }
+        return null;
+    }
+
+    private Movie createMovieFromResultSet(ResultSet rs) throws SQLException {
+        return new Movie(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("category"),
+                rs.getDouble("imdbRating"),
+                rs.getDouble("personalRating"),
+                rs.getString("fileLink"),
+                rs.getTimestamp("lastViewed").toLocalDateTime()
+        );
     }
 }

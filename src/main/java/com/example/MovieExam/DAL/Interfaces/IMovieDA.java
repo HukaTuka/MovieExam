@@ -15,4 +15,6 @@ public interface IMovieDA {
 
         void deleteMovie(int movieId) throws Exception;
 
+        Movie getMovieById(int id) throws Exception;
+
 }

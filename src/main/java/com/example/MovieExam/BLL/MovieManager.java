@@ -6,7 +6,6 @@ import com.example.MovieExam.DAL.Interfaces.IMovieDA;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class MovieManager {
@@ -14,7 +13,7 @@ public class MovieManager {
     private IMovieDA movieDAO;
     private static final String DATA_FOLDER = "data";
 
-    public MovieManager(IMovieDA movieDAO) {
+    public MovieManager() {
         this.movieDAO = new MovieDAO();
 
         // Ensure data folder exists
@@ -30,18 +29,18 @@ public class MovieManager {
 
     /**
      * Create a new movie after validating input and file location
+     *
      * @param name
      * @param category
      * @param imdbRating
      * @param personalRating
      * @param filelink
-     * @param lastViewed
      * @return
      * @throws Exception
      */
-    public Movie createMovie(String name, String category, double imdbRating, double personalRating, String filelink, LocalDateTime lastViewed) throws Exception {
+    public Movie createMovie(String name, String category, double imdbRating, double personalRating, String filelink) throws Exception {
         // Validation
-        validateMovieInput(name, category, imdbRating, personalRating, filelink, lastViewed);
+        validateMovieInput(name, category, imdbRating, personalRating, filelink);
 
 
         // Check if file exists
@@ -49,6 +48,7 @@ public class MovieManager {
         if (!file.exists()) {
             throw new IllegalArgumentException("File does not exist: " + filelink);
         }
+
 
         // Validate file is in data folder
         if (!isFileInDataFolder(file)) {
@@ -61,12 +61,33 @@ public class MovieManager {
             throw new IllegalArgumentException("Only MP4 and MPEG4 files are supported");
         }
 
-        Movie movie = new Movie(name, category, imdbRating, personalRating, filelink, lastViewed);
+        Movie movie = new Movie(name, category, imdbRating, personalRating, filelink);
         return movieDAO.createMovie(movie);
     }
 
     public void deleteMovie(int movieId) throws Exception {
+        if (movieId <= 0) {
+            throw new IllegalArgumentException("Invalid song ID");
+        }
         movieDAO.deleteMovie(movieId);
+    }
+    public Movie getMovieById(int id) throws Exception {
+        return movieDAO.getMovieById(id);
+    }
+
+    public void deleteMovie(int movieId, boolean deleteFile) throws Exception {
+        if (deleteFile) {
+            Movie movie = movieDAO.getMovieById(movieId);
+            if (movie != null) {
+                File file = new File(movie.getFileLink());
+                if (file.exists() && isFileInDataFolder(file)) {
+                    if (!file.delete()) {
+                        throw new Exception("Failed to delete file: " + movie.getFileLink());
+                    }
+                }
+            }
+        }
+        deleteMovie(movieId);
     }
 
     public void updateMovie(Movie updatedMovie) throws Exception {
@@ -94,15 +115,15 @@ public class MovieManager {
 
     /**
      * Validate movie input fields
+     *
      * @param name
      * @param category
      * @param imdbRating
      * @param personalRating
      * @param fileLink
-     * @param lastViewed
      * @throws IllegalArgumentException
      */
-    public void validateMovieInput(String name, String category, double imdbRating, double personalRating, String fileLink, LocalDateTime lastViewed) throws IllegalArgumentException {
+    public void validateMovieInput(String name, String category, double imdbRating, double personalRating, String fileLink) throws IllegalArgumentException {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Movie name cannot be empty");
         }
@@ -117,9 +138,6 @@ public class MovieManager {
         }
         if (fileLink == null || fileLink.trim().isEmpty()) {
             throw new IllegalArgumentException("File link cannot be empty");
-        }
-        if (lastViewed == null) {
-            throw new IllegalArgumentException("Last viewed date cannot be null");
         }
     }
 
@@ -143,4 +161,9 @@ public class MovieManager {
     public static String getDataFolderPath() {
         return new File(DATA_FOLDER).getAbsolutePath();
     }
+
+    public Movie searchMovies(String query) {
+        return null;
+    }
+
 }

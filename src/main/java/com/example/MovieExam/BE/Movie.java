@@ -45,6 +45,9 @@ public class Movie {
        this(-1, name, category, imdbRating, personalRating, fileLink, lastViewed);
 
     }
+    public Movie (String name, String category, double imdbRating, double personalRating, String fileLink) {
+        this(-1, name, category, imdbRating, personalRating, fileLink, null);
+    }
 
     public int getId() {
         return id;
@@ -60,14 +63,6 @@ public class Movie {
 
     public void setLastViewed(LocalDateTime lastViewed) {
         this.lastViewed = lastViewed;
-    }
-
-    public String getFileLink() {
-        return fileLink;
-    }
-
-    public void setFileLink(String fileLink) {
-        this.fileLink = fileLink;
     }
 
     public double getPersonalRating() {
@@ -106,4 +101,13 @@ public class Movie {
     public String toString() {
         return id + ": " + name + " | " + category + " | IMDB: " + imdbRating + " | Personal: " + personalRating + " | Last Viewed: " + lastViewed;
     }
+
+    public String getFileLink() {
+        return fileLink;
+    }
+
+    public void setFileLink(String fileLink) {
+        this.fileLink = fileLink;
+    }
+
 }
