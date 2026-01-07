@@ -6,15 +6,18 @@ import com.example.MovieExam.DAL.Interfaces.IMovieDA;
 
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.sql.Statement;
+import java.util.List;
 
 public class MovieDAO implements IMovieDA {
 
     @Override
     public List<Movie> getAllMovies() throws Exception {
+        if (!DBConnector.isConnectionAvailable()) {
+            System.out.println("Database offline - returning empty movie list");
+            return new ArrayList<>();
+        }
+
         List<Movie> movies = new ArrayList<>();
         String sql = "SELECT * FROM Movie ORDER BY lastViewed DESC";
 
@@ -26,13 +29,21 @@ public class MovieDAO implements IMovieDA {
                 movies.add(createMovieFromResultSet(rs));
             }
         } catch (SQLException ex) {
-            throw new Exception("Could not get movies from database", ex);
+            throw new Exception("Could not get movies from database: " + ex.getMessage(), ex);
         }
         return movies;
     }
 
     @Override
     public Movie createMovie(Movie newMovie) throws Exception {
+        if (!DBConnector.isConnectionAvailable()) {
+            throw new Exception(
+                    "Cannot save movie - Database is not available.\n\n" +
+                            "Error: " + DBConnector.getLastError() + "\n\n" +
+                            "Please check your database connection and try again."
+            );
+        }
+
         String sql = "INSERT INTO Movie (name, category, imdbRating, personalRating, fileLink, lastViewed) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnector.getConnection();
@@ -43,6 +54,7 @@ public class MovieDAO implements IMovieDA {
             stmt.setDouble(3, newMovie.getImdbRating());
             stmt.setDouble(4, newMovie.getPersonalRating());
             stmt.setString(5, newMovie.getFileLink());
+
             // Set lastViewed to current time if null
             LocalDateTime lastViewed = newMovie.getLastViewed();
             if (lastViewed == null) {
@@ -57,12 +69,21 @@ public class MovieDAO implements IMovieDA {
             if (rs.next()) {
                 newMovie.setId(rs.getInt(1));
             }
+        } catch (SQLException ex) {
+            throw new Exception("Could not create movie: " + ex.getMessage(), ex);
         }
         return newMovie;
     }
 
     @Override
     public void updateMovie(Movie movie) throws Exception {
+        if (!DBConnector.isConnectionAvailable()) {
+            throw new Exception(
+                    "Cannot update movie - Database is not available.\n\n" +
+                            "Error: " + DBConnector.getLastError()
+            );
+        }
+
         String sql = "UPDATE Movie SET name = ?, category = ?, imdbRating = ?, personalRating = ?, fileLink = ?, lastViewed = ? WHERE id = ?";
 
         try (Connection conn = DBConnector.getConnection();
@@ -84,12 +105,19 @@ public class MovieDAO implements IMovieDA {
 
             stmt.executeUpdate();
         } catch (SQLException ex) {
-            throw new Exception("Could not update movie", ex);
+            throw new Exception("Could not update movie: " + ex.getMessage(), ex);
         }
     }
 
     @Override
     public void deleteMovie(int movieId) throws Exception {
+        if (!DBConnector.isConnectionAvailable()) {
+            throw new Exception(
+                    "Cannot delete movie - Database is not available.\n\n" +
+                            "Error: " + DBConnector.getLastError()
+            );
+        }
+
         String sql = "DELETE FROM Movie WHERE id = ?";
 
         try (Connection conn = DBConnector.getConnection();
@@ -99,13 +127,16 @@ public class MovieDAO implements IMovieDA {
             stmt.executeUpdate();
 
         } catch (SQLException ex) {
-            throw new Exception("Could not delete movie", ex);
+            throw new Exception("Could not delete movie: " + ex.getMessage(), ex);
         }
     }
 
-
     @Override
     public Movie getMovieById(int id) throws SQLException {
+        if (!DBConnector.isConnectionAvailable()) {
+            return null;
+        }
+
         String sql = "SELECT * FROM Movie WHERE id = ?";
 
         try (Connection conn = DBConnector.getConnection();
