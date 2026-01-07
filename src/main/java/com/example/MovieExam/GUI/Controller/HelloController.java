@@ -29,6 +29,7 @@ public class HelloController {
     }
 
     public void btnDeleteMovie(ActionEvent actionEvent) {
+
     }
 
     public void btnWatchMovie(ActionEvent actionEvent) {
