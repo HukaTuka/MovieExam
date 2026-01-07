@@ -2,7 +2,7 @@ package com.example.MovieExam.BE;
 
 public class Category {
     private int id;
-    private static String name;
+    private String name;
 
     public Category(int id, String name){
         this.id = id;
@@ -21,7 +21,7 @@ public class Category {
         this.name = name;
     }
 
-    public static String getName() {
+    public String getName() {
         return name;
     }
 
