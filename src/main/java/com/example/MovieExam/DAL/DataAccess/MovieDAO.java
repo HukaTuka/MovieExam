@@ -5,13 +5,30 @@ import com.example.MovieExam.DAL.DB.DBConnector;
 import com.example.MovieExam.DAL.Interfaces.IMovieDA;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.sql.Statement;
 
 public class MovieDAO implements IMovieDA {
 
     @Override
     public List<Movie> getAllMovies() throws Exception {
-        return List.of();
+        List<Movie> movies = new ArrayList<>();
+        String sql = "SELECT * FROM Movie ORDER BY lastViewed DESC";
+
+        try (Connection conn = DBConnector.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                movies.add(createMovieFromResultSet(rs));
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Could not get movies from database", ex);
+        }
+        return movies;
     }
 
     @Override
@@ -26,7 +43,13 @@ public class MovieDAO implements IMovieDA {
             stmt.setDouble(3, newMovie.getImdbRating());
             stmt.setDouble(4, newMovie.getPersonalRating());
             stmt.setString(5, newMovie.getFileLink());
-            stmt.setDate(6, java.sql.Date.valueOf(newMovie.getLastViewed().toLocalDate()));
+            // Set lastViewed to current time if null
+            LocalDateTime lastViewed = newMovie.getLastViewed();
+            if (lastViewed == null) {
+                lastViewed = LocalDateTime.now();
+                newMovie.setLastViewed(lastViewed);
+            }
+            stmt.setTimestamp(6, Timestamp.valueOf(lastViewed));
 
             stmt.executeUpdate();
 
@@ -40,7 +63,29 @@ public class MovieDAO implements IMovieDA {
 
     @Override
     public void updateMovie(Movie movie) throws Exception {
+        String sql = "UPDATE Movie SET name = ?, category = ?, imdbRating = ?, personalRating = ?, fileLink = ?, lastViewed = ? WHERE id = ?";
 
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, movie.getName());
+            stmt.setString(2, movie.getCategory());
+            stmt.setDouble(3, movie.getImdbRating());
+            stmt.setDouble(4, movie.getPersonalRating());
+            stmt.setString(5, movie.getFileLink());
+
+            if (movie.getLastViewed() != null) {
+                stmt.setTimestamp(6, Timestamp.valueOf(movie.getLastViewed()));
+            } else {
+                stmt.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
+            }
+
+            stmt.setInt(7, movie.getId());
+
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new Exception("Could not update movie", ex);
+        }
     }
 
     @Override

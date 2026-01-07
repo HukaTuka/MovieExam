@@ -1,35 +1,39 @@
 package com.example.MovieExam.DAL.DB;
 
-//Server imports
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
-//Java imports
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.sql.Connection;
 import java.util.Properties;
+import java.sql.Connection;
 
 public class DBConnector {
 
     private static final String PROP_FILE = "config/config.settings";
-    private static SQLServerDataSource dataSource;
+
     private static DBConnector instance;
+    private SQLServerDataSource dataSource;
 
+    private DBConnector() {
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream(new File(PROP_FILE)));
 
-    public DBConnector() throws IOException {
-        Properties databaseProperties = new Properties();
-        databaseProperties.load(new FileInputStream(new File(PROP_FILE)));
+            dataSource = new SQLServerDataSource();
+            dataSource.setServerName(props.getProperty("Server"));
+            dataSource.setDatabaseName(props.getProperty("Database"));
+            dataSource.setUser(props.getProperty("User"));
+            dataSource.setPassword(props.getProperty("Password"));
+            dataSource.setPortNumber(1433);
+            dataSource.setTrustServerCertificate(true);
 
-        dataSource = new SQLServerDataSource();
-        dataSource.setServerName(databaseProperties.getProperty("Server"));
-        dataSource.setDatabaseName(databaseProperties.getProperty("Database"));
-        dataSource.setUser(databaseProperties.getProperty("User"));
-        dataSource.setPassword(databaseProperties.getProperty("Password"));
-        dataSource.setPortNumber(1433);
-        dataSource.setTrustServerCertificate(true);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize database connector", e);
+        }
     }
-    public static DBConnector getInstance() throws IOException {
+
+    public static DBConnector getInstance() {
         if (instance == null) {
             instance = new DBConnector();
         }
@@ -37,15 +41,12 @@ public class DBConnector {
     }
 
     public static Connection getConnection() throws SQLServerException {
-        return dataSource.getConnection();
+        return getInstance().dataSource.getConnection();
     }
 
-
     public static void main(String[] args) throws Exception {
-        DBConnector databaseConnector = new DBConnector();
-
-        try (Connection connection = databaseConnector.getConnection()) {
-            System.out.println("Is it open? " + !connection.isClosed());
-        } //Connection gets closed here
+        Connection connection = DBConnector.getConnection();
+        System.out.println(!connection.isClosed());
+        connection.close();
     }
 }

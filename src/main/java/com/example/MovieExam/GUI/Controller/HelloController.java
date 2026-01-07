@@ -10,16 +10,25 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 public class HelloController implements Initializable {
-    @FXML
-    private Label welcomeText;
+    @FXML private TableView<Movie> tblMovies;
+    @FXML private TableColumn<Movie, String> colMovieName;
+    @FXML private TableColumn<Movie, String> colCategory;
+    @FXML private TableColumn<Movie, Double> coIMDBRating;
+    @FXML private TableColumn<Movie, Double> colPersonalRating;
+    @FXML private TableColumn<Movie, LocalDateTime> colLastViewed;
+    @FXML private Label welcomeText;
     private MovieModel movieModel;
 
     @Override
@@ -27,8 +36,34 @@ public class HelloController implements Initializable {
         try {
             movieModel = new MovieModel();
 
+            // Setup table columns
+            setupTableColumns();
+
+            // Bind the table to the observable list
+            tblMovies.setItems(movieModel.getObservableMovies());
+
+
+            refreshMovieList();
+
         } catch (Exception e) {
             showError("Initialization Error", "Failed to initialize application: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void setupTableColumns() {
+        colMovieName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
+        coIMDBRating.setCellValueFactory(new PropertyValueFactory<>("imdbRating"));
+        colPersonalRating.setCellValueFactory(new PropertyValueFactory<>("personalRating"));
+        colLastViewed.setCellValueFactory(new PropertyValueFactory<>("lastViewed"));
+
+    }
+    private void refreshMovieList() {
+        try {
+            movieModel.loadAllMovies();
+        } catch (Exception e) {
+            showError("Error", "Failed to load movies: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -45,9 +80,21 @@ public class HelloController implements Initializable {
 
     public void btnNewMovie(ActionEvent actionEvent) {
         openMovieWindow(null);
+        refreshMovieList();
     }
 
     public void btnEditMovie(ActionEvent actionEvent) {
+        Movie selectedMovie = tblMovies.getSelectionModel().getSelectedItem();
+        if (selectedMovie != null) {
+            try {
+                movieModel.deleteMovie(selectedMovie, false);
+                refreshMovieList();
+            } catch (Exception e) {
+                showError("Delete Error", "Failed to delete movie: " + e.getMessage());
+            }
+        } else {
+            showError("No Selection", "Please select a movie to delete");
+        }
     }
 
     public void btnDeleteMovie(ActionEvent actionEvent) {
@@ -55,6 +102,23 @@ public class HelloController implements Initializable {
     }
 
     public void btnWatchMovie(ActionEvent actionEvent) {
+        Movie selectedMovie = tblMovies.getSelectionModel().getSelectedItem();
+        if (selectedMovie != null) {
+            try {
+                // Update lastViewed to current time
+                selectedMovie.setLastViewed(LocalDateTime.now());
+                movieModel.updateMovie(selectedMovie);
+                refreshMovieList();
+
+                // TODO: Open media player with the movie file
+                // movieModel.playMovie(selectedMovie);
+
+            } catch (Exception e) {
+                showError("Error", "Failed to open movie: " + e.getMessage());
+            }
+        } else {
+            showError("No Selection", "Please select a movie to watch");
+        }
     }
     public void openMovieWindow(Movie movie) {
         try {
