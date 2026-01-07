@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TableColumn?>
@@ -24,8 +25,15 @@
                           <Font name="System Bold" size="13.0" />
                       </font>
                   </Label>
-                  <ListView fx:id="lstPl" VBox.vgrow="ALWAYS" />
+                  <ListView fx:id="lstPl" prefHeight="601.0" prefWidth="193.0" VBox.vgrow="ALWAYS" />
                   <HBox spacing="5" />
+               <HBox prefHeight="25.0" prefWidth="182.0" spacing="5">
+                  <children>
+                     <Button onAction="#btnAddNewC" prefWidth="65" text="New..." />
+                     <Button onAction="#btnEditC" prefWidth="65" text="Edit..." />
+                     <Button onAction="#btnDeleteC" prefWidth="65" text="Delete" />
+                  </children>
+               </HBox>
               </children>
            </VBox>
            <VBox spacing="5" HBox.hgrow="ALWAYS">
@@ -40,15 +48,23 @@
                           <TextField fx:id="txtSearch" promptText="Search by title or category..." HBox.hgrow="ALWAYS" />
                       </children>
                   </HBox>
-                  <TableView fx:id="tblSongs" prefHeight="576.0" prefWidth="660.0" VBox.vgrow="ALWAYS">
+                  <TableView fx:id="tblSongs" prefHeight="571.0" prefWidth="530.0" VBox.vgrow="ALWAYS">
                       <columns>
                           <TableColumn fx:id="colMovieTitle" prefWidth="147.5" text="Title" />
-                          <TableColumn fx:id="colCategory" prefWidth="175.5" text="Category" />
-                          <TableColumn fx:id="coIMDBRating" prefWidth="97.0" text="IMDB Rating" />
-                          <TableColumn fx:id="colPersonalRating" prefWidth="110.5" text="Personal Rating" />
+                          <TableColumn fx:id="colCategory" prefWidth="180.5" text="Category" />
+                          <TableColumn fx:id="coIMDBRating" prefWidth="137.0" text="IMDB Rating" />
+                          <TableColumn fx:id="colPersonalRating" prefWidth="143.5" resizable="false" text="Personal Rating" />
                       </columns>
                   </TableView>
                   <HBox spacing="5" />
+               <HBox prefHeight="25.0" prefWidth="634.0" spacing="5">
+                  <children>
+                     <Button onAction="#btnNewMovie" prefWidth="65" text="New..." />
+                     <Button onAction="#btnEditMovie" prefWidth="65" text="Edit..." />
+                     <Button onAction="#btnDeleteMovie" prefWidth="65" text="Delete" />
+                     <Button mnemonicParsing="false" onAction="#btnWatchMovie" text="Watch Movie" />
+                  </children>
+               </HBox>
               </children>
            </VBox>
        </HBox>
