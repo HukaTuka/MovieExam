@@ -2,11 +2,11 @@ package com.example.MovieExam.BE;
 
 public class Category {
     private int id;
-    private String name;
+    private static String name;
 
     public Category(int id, String name){
         this.id = id;
-        this.name= name;
+        this.name = name;
     }
 
     public int getId() {
@@ -21,13 +21,13 @@ public class Category {
         this.name = name;
     }
 
-    public String getName() {
+    public static String getName() {
         return name;
     }
 
     @Override
     public String toString()
     {
-        return id + " " + name;
+        return id + ": " + name;
     }
 }
