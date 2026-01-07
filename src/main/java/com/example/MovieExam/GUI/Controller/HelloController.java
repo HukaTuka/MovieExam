@@ -15,6 +15,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.time.format.DateTimeFormatter;
+import javafx.scene.control.TableCell;
 
 import java.io.IOException;
 import java.net.URL;
@@ -58,7 +60,19 @@ public class HelloController implements Initializable {
         colPersonalRating.setCellValueFactory(new PropertyValueFactory<>("personalRating"));
         colLastViewed.setCellValueFactory(new PropertyValueFactory<>("lastViewed"));
 
+        // Format lastViewed column to proper date-time format
+        colLastViewed.setCellFactory(column -> new TableCell<Movie, LocalDateTime>() {
+            private final DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+
+            @Override
+            protected void updateItem(LocalDateTime value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty || value == null ? "" : value.format(formatter));
+            }
+        });
     }
+
     private void refreshMovieList() {
         try {
             movieModel.loadAllMovies();
