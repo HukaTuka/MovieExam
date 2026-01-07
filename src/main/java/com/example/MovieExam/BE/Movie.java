@@ -7,9 +7,9 @@ public class Movie {
     private int id;
     private String name;
     private String category;
-    private int imdbRating;
-    private int personalRating;
-    private String filelink;
+    private double imdbRating;
+    private double personalRating;
+    private String fileLink;
     private LocalDateTime lastViewed;
 
     /**
@@ -19,17 +19,31 @@ public class Movie {
      * @param category
      * @param imdbRating
      * @param personalRating
-     * @param filelink
+     * @param fileLink
      * @param lastViewed
      */
-   public void movie(int id, String name, String category, int imdbRating, int personalRating, String filelink, LocalDateTime lastViewed) {
+   public Movie(int id, String name, String category, double imdbRating, double personalRating, String fileLink, LocalDateTime lastViewed) {
         this.id = id;
         this.name = name;
         this.category = category;
         this.imdbRating = imdbRating;
         this.personalRating = personalRating;
-        this.filelink = filelink;
+        this.fileLink = fileLink;
         this.lastViewed = lastViewed;
+    }
+
+    /**
+     * Constructor for Movie class without id
+     * @param name
+     * @param category
+     * @param imdbRating
+     * @param personalRating
+     * @param fileLink
+     * @param lastViewed
+     */
+    public Movie (String name, String category, double imdbRating, double personalRating, String fileLink, LocalDateTime lastViewed) {
+       this(-1, name, category, imdbRating, personalRating, fileLink, lastViewed);
+
     }
 
     public int getId() {
@@ -48,27 +62,27 @@ public class Movie {
         this.lastViewed = lastViewed;
     }
 
-    public String getFilelink() {
-        return filelink;
+    public String getFileLink() {
+        return fileLink;
     }
 
-    public void setFilelink(String filelink) {
-        this.filelink = filelink;
+    public void setFileLink(String fileLink) {
+        this.fileLink = fileLink;
     }
 
-    public int getPersonalRating() {
+    public double getPersonalRating() {
         return personalRating;
     }
 
-    public void setPersonalRating(int personalRating) {
+    public void setPersonalRating(double personalRating) {
         this.personalRating = personalRating;
     }
 
-    public int getImdbRating() {
+    public double getImdbRating() {
         return imdbRating;
     }
 
-    public void setImdbRating(int imdbRating) {
+    public void setImdbRating(double imdbRating) {
         this.imdbRating = imdbRating;
     }
 
