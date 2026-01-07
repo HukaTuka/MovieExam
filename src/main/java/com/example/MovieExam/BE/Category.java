@@ -17,11 +17,11 @@ public class Category {
         this.id = id;
     }
 
-    public void setname(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
-    public String getname() {
+    public String getName() {
         return name;
     }
 
