@@ -178,10 +178,10 @@ public class HelloController implements Initializable {
     }
 
     public void openCategoryWindow (ActionEvent actionEvent) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/hello-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/com/example/MovieExam/Views/CategoryCreationWindow.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
-        stage.setTitle("HboFlix");
+        stage.setTitle("Category Creation");
         stage.setScene(scene);
         stage.show();
     }
