@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class HelloController implements Initializable {
+public class HBOFlixController implements Initializable {
     @FXML private TableView<Movie> tblMovies;
     @FXML private TableColumn<Movie, String> colMovieName;
     @FXML private TableColumn<Movie, String> colCategory;
@@ -178,7 +178,7 @@ public class HelloController implements Initializable {
     }
 
     public void openCategoryWindow (ActionEvent actionEvent) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/com/example/MovieExam/Views/CatCreationWindow.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/com/example/MovieExam/Views/CatCreationWindowView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
         stage.setTitle("Category Creation");
