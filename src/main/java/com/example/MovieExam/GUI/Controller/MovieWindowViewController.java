@@ -211,7 +211,7 @@ public class MovieWindowViewController implements Initializable {
             txtFileLink.setText(movie.getFileLink());
 
         } else {
-            lblName.setText("New Song");
+            lblName.setText("New Movie");
         }
     }
 private boolean isFileInDataFolder(File file) {

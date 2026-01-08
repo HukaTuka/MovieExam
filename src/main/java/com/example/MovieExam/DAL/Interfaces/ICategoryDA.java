@@ -11,5 +11,7 @@ public interface ICategoryDA {
 
     void updateCategory(Category category) throws Exception;
 
-    void deleteCategory(Category category) throws Exception;
+    void deleteCategory(int category) throws Exception;
+
+    Category getCategoryById(int id) throws Exception;
 }

@@ -74,17 +74,45 @@ public class CategoriesDAO implements ICategoryDA {
     }
 
     @Override
-    public void deleteCategory(Category category) throws Exception {
+    public void deleteCategory(int category) throws Exception {
         String sql = "DELETE FROM dbo.Category WHERE ID = ?";
 
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, category.getId());
+            stmt.setInt(1, category);
             stmt.executeUpdate();
 
         } catch (SQLException ex) {
             throw new Exception("Could not delete category", ex);
         }
+    }
+
+    @Override
+    public Category getCategoryById(int id) throws Exception {
+        if (!DBConnector.isConnectionAvailable()) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM Category WHERE id = ?";
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return createCategoryFromResultSet(rs);
+            }
+        }
+        return null;
+    }
+    private Category createCategoryFromResultSet(ResultSet rs) throws SQLException {
+        return new Category(
+                rs.getInt("id"),
+                rs.getString("name")
+        );
+
     }
 }
