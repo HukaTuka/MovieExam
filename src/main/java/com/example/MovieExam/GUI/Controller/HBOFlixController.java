@@ -31,6 +31,7 @@ public class HBOFlixController implements Initializable {
     @FXML private Label welcomeText;
     private MovieModel movieModel;
 
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle){
         try {
