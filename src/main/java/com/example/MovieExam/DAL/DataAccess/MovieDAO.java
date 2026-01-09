@@ -1,5 +1,6 @@
 package com.example.MovieExam.DAL.DataAccess;
 
+import com.example.MovieExam.BE.Category;
 import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.DAL.DB.DBConnector;
 import com.example.MovieExam.DAL.Interfaces.IMovieDA;
@@ -7,7 +8,9 @@ import com.example.MovieExam.DAL.Interfaces.IMovieDA;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MovieDAO implements IMovieDA {
 
@@ -18,20 +21,48 @@ public class MovieDAO implements IMovieDA {
             return new ArrayList<>();
         }
 
-        List<Movie> movies = new ArrayList<>();
-        String sql = "SELECT * FROM Movie ORDER BY lastViewed DESC";
+        Map<Integer, Movie> movieMap = new HashMap<>();
+        String sql = "SELECT m.*, c.id as catId, c.Name as catName " +
+                "FROM Movie m " +
+                "LEFT JOIN CatMovie cm ON m.id = cm.movieId " +
+                "LEFT JOIN Category c ON cm.categoryId = c.id " +
+                "ORDER BY m.lastViewed DESC";
 
         try (Connection conn = DBConnector.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                movies.add(createMovieFromResultSet(rs));
+                int movieId = rs.getInt("id");
+
+                // Get or create movie
+                Movie movie = movieMap.get(movieId);
+                if (movie == null) {
+                    movie = new Movie(
+                            movieId,
+                            rs.getString("name"),
+                            new ArrayList<>(),
+                            rs.getDouble("imdbRating"),
+                            rs.getDouble("personalRating"),
+                            rs.getString("fileLink"),
+                            rs.getTimestamp("lastViewed") != null ?
+                                    rs.getTimestamp("lastViewed").toLocalDateTime() : null
+                    );
+                    movieMap.put(movieId, movie);
+                }
+
+                // Add category if exists
+                int catId = rs.getInt("catId");
+                if (!rs.wasNull()) {
+                    String catName = rs.getString("catName");
+                    movie.getCategories().add(new Category(catId, catName));
+                }
             }
         } catch (SQLException ex) {
             throw new Exception("Could not get movies from database: " + ex.getMessage(), ex);
         }
-        return movies;
+
+        return new ArrayList<>(movieMap.values());
     }
 
     @Override
@@ -44,24 +75,22 @@ public class MovieDAO implements IMovieDA {
             );
         }
 
-        String sql = "INSERT INTO Movie (name, category, imdbRating, personalRating, fileLink, lastViewed) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Movie (name, imdbRating, personalRating, fileLink, lastViewed) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, newMovie.getName());
-            stmt.setString(2, newMovie.getCategory());
-            stmt.setDouble(3, newMovie.getImdbRating());
-            stmt.setDouble(4, newMovie.getPersonalRating());
-            stmt.setString(5, newMovie.getFileLink());
+            stmt.setDouble(2, newMovie.getImdbRating());
+            stmt.setDouble(3, newMovie.getPersonalRating());
+            stmt.setString(4, newMovie.getFileLink());
 
-            // Set lastViewed to current time if null
             LocalDateTime lastViewed = newMovie.getLastViewed();
             if (lastViewed == null) {
                 lastViewed = LocalDateTime.now();
                 newMovie.setLastViewed(lastViewed);
             }
-            stmt.setTimestamp(6, Timestamp.valueOf(lastViewed));
+            stmt.setTimestamp(5, Timestamp.valueOf(lastViewed));
 
             stmt.executeUpdate();
 
@@ -69,6 +98,12 @@ public class MovieDAO implements IMovieDA {
             if (rs.next()) {
                 newMovie.setId(rs.getInt(1));
             }
+
+            // Insert categories into CatMovie table
+            if (newMovie.getCategories() != null && !newMovie.getCategories().isEmpty()) {
+                insertMovieCategories(conn, newMovie.getId(), newMovie.getCategories());
+            }
+
         } catch (SQLException ex) {
             throw new Exception("Could not create movie: " + ex.getMessage(), ex);
         }
@@ -84,26 +119,31 @@ public class MovieDAO implements IMovieDA {
             );
         }
 
-        String sql = "UPDATE Movie SET name = ?, category = ?, imdbRating = ?, personalRating = ?, fileLink = ?, lastViewed = ? WHERE id = ?";
+        String sql = "UPDATE Movie SET name = ?, imdbRating = ?, personalRating = ?, fileLink = ?, lastViewed = ? WHERE id = ?";
 
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, movie.getName());
-            stmt.setString(2, movie.getCategory());
-            stmt.setDouble(3, movie.getImdbRating());
-            stmt.setDouble(4, movie.getPersonalRating());
-            stmt.setString(5, movie.getFileLink());
+            stmt.setDouble(2, movie.getImdbRating());
+            stmt.setDouble(3, movie.getPersonalRating());
+            stmt.setString(4, movie.getFileLink());
 
             if (movie.getLastViewed() != null) {
-                stmt.setTimestamp(6, Timestamp.valueOf(movie.getLastViewed()));
+                stmt.setTimestamp(5, Timestamp.valueOf(movie.getLastViewed()));
             } else {
-                stmt.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
+                stmt.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
             }
 
-            stmt.setInt(7, movie.getId());
-
+            stmt.setInt(6, movie.getId());
             stmt.executeUpdate();
+
+            // Update categories - delete old ones and insert new ones
+            deleteMovieCategories(conn, movie.getId());
+            if (movie.getCategories() != null && !movie.getCategories().isEmpty()) {
+                insertMovieCategories(conn, movie.getId(), movie.getCategories());
+            }
+
         } catch (SQLException ex) {
             throw new Exception("Could not update movie: " + ex.getMessage(), ex);
         }
@@ -118,6 +158,7 @@ public class MovieDAO implements IMovieDA {
             );
         }
 
+        // The CASCADE delete will handle CatMovie entries automatically
         String sql = "DELETE FROM Movie WHERE id = ?";
 
         try (Connection conn = DBConnector.getConnection();
@@ -137,7 +178,11 @@ public class MovieDAO implements IMovieDA {
             return null;
         }
 
-        String sql = "SELECT * FROM Movie WHERE id = ?";
+        String sql = "SELECT m.*, c.id as catId, c.Name as catName " +
+                "FROM Movie m " +
+                "LEFT JOIN CatMovie cm ON m.id = cm.movieId " +
+                "LEFT JOIN Category c ON cm.categoryId = c.id " +
+                "WHERE m.id = ?";
 
         try (Connection conn = DBConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -145,22 +190,64 @@ public class MovieDAO implements IMovieDA {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                return createMovieFromResultSet(rs);
+            Movie movie = null;
+            while (rs.next()) {
+                if (movie == null) {
+                    movie = new Movie(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            new ArrayList<>(),
+                            rs.getDouble("imdbRating"),
+                            rs.getDouble("personalRating"),
+                            rs.getString("fileLink"),
+                            rs.getTimestamp("lastViewed") != null ?
+                                    rs.getTimestamp("lastViewed").toLocalDateTime() : null
+                    );
+                }
+
+                // Add category if exists
+                int catId = rs.getInt("catId");
+                if (!rs.wasNull()) {
+                    String catName = rs.getString("catName");
+                    movie.getCategories().add(new Category(catId, catName));
+                }
             }
+            return movie;
         }
-        return null;
     }
 
-    private Movie createMovieFromResultSet(ResultSet rs) throws SQLException {
-        return new Movie(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getString("category"),
-                rs.getDouble("imdbRating"),
-                rs.getDouble("personalRating"),
-                rs.getString("fileLink"),
-                rs.getTimestamp("lastViewed").toLocalDateTime()
-        );
+    /**
+     * Insert movie-category associations into CatMovie table
+     * @param conn
+     * @param movieId
+     * @param categories
+     * @throws SQLException
+     */
+    private void insertMovieCategories(Connection conn, int movieId, List<Category> categories) throws SQLException {
+        String sql = "INSERT INTO CatMovie (movieId, categoryId) VALUES (?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (Category category : categories) {
+                stmt.setInt(1, movieId);
+                stmt.setInt(2, category.getId());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+    }
+
+    /**
+     * Delete all category associations for a movie
+     * @param conn
+     * @param movieId
+     * @throws SQLException
+     */
+    private void deleteMovieCategories(Connection conn, int movieId) throws SQLException {
+        String sql = "DELETE FROM CatMovie WHERE movieId = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, movieId);
+            stmt.executeUpdate();
+        }
     }
 }

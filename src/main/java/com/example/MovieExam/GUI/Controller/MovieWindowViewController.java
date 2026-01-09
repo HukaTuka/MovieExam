@@ -1,33 +1,37 @@
 package com.example.MovieExam.GUI.Controller;
 
+import com.example.MovieExam.BE.Category;
 import com.example.MovieExam.BE.Movie;
+import com.example.MovieExam.GUI.Model.CategoryModel;
 import com.example.MovieExam.GUI.Model.MovieModel;
 
-//Java imports
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+
 public class MovieWindowViewController implements Initializable {
 
     public Label lblName;
     public TextField txtName;
     public TextField txtImdbRating;
     public TextField txtPersonalRating;
-    public TextField txtCategory;
+    public ListView<Category> lstCategories;
     public TextField txtFileLink;
     public Label lblError;
+
     private MovieModel movieModel;
+    private CategoryModel categoryModel;
     private Movie movieToEdit;
     private boolean saveClicked = false;
 
@@ -38,6 +42,7 @@ public class MovieWindowViewController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         try {
             movieModel = new MovieModel();
+            categoryModel = new CategoryModel();
 
             // Initialize data directory
             dataDirectory = new File(DATA_FOLDER);
@@ -47,6 +52,10 @@ public class MovieWindowViewController implements Initializable {
                 dataDirectory.mkdirs();
                 System.out.println("Created data folder at: " + dataDirectory.getAbsolutePath());
             }
+
+            // Setup category list with multiple selection
+            lstCategories.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            lstCategories.setItems(categoryModel.getObservableCategories());
 
         } catch (IOException e) {
             showError("Failed to initialize: " + e.getMessage());
@@ -64,6 +73,10 @@ public class MovieWindowViewController implements Initializable {
         this.movieModel = model;
     }
 
+    public void setCategoryModel(CategoryModel model) {
+        this.categoryModel = model;
+    }
+
     @FXML
     private void closeWindow() {
         Stage stage = (Stage) txtName.getScene().getWindow();
@@ -73,6 +86,7 @@ public class MovieWindowViewController implements Initializable {
     public boolean isSaveClicked() {
         return saveClicked;
     }
+
     @FXML
     private void handleBrowse(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
@@ -84,7 +98,7 @@ public class MovieWindowViewController implements Initializable {
         }
 
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Audio Files", "*.mp4", "*.mpeg4"),
+                new FileChooser.ExtensionFilter("Video Files", "*.mp4", "*.mpeg4"),
                 new FileChooser.ExtensionFilter("MP4 Files", "*.mp4"),
                 new FileChooser.ExtensionFilter("MPEG4 Files", "*.mpeg4"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
@@ -105,12 +119,13 @@ public class MovieWindowViewController implements Initializable {
             }
         }
     }
+
     @FXML
     private void handleSave(ActionEvent event) {
         if (validateInput()) {
             try {
                 String name = txtName.getText().trim();
-                String category = txtCategory.getText().trim();
+                List<Category> selectedCategories = new ArrayList<>(lstCategories.getSelectionModel().getSelectedItems());
                 Double imdbRating = Double.parseDouble(txtImdbRating.getText().trim());
                 Double personalRating = Double.parseDouble(txtPersonalRating.getText().trim());
                 String fileLink = txtFileLink.getText().trim();
@@ -118,7 +133,7 @@ public class MovieWindowViewController implements Initializable {
                 if (movieToEdit != null) {
                     // Edit existing movie
                     movieToEdit.setName(name);
-                    movieToEdit.setCategory(category);
+                    movieToEdit.setCategories(selectedCategories);
                     movieToEdit.setImdbRating(imdbRating);
                     movieToEdit.setPersonalRating(personalRating);
                     movieToEdit.setFileLink(fileLink);
@@ -126,12 +141,11 @@ public class MovieWindowViewController implements Initializable {
                     movieModel.updateMovie(movieToEdit);
                 } else {
                     // Create new movie
-                    movieModel.createMovie(name, category, imdbRating, personalRating, fileLink);
+                    movieModel.createMovie(name, selectedCategories, imdbRating, personalRating, fileLink);
                 }
 
                 saveClicked = true;
                 closeWindow();
-
 
             } catch (Exception e) {
                 showError("Error saving movie: " + e.getMessage());
@@ -145,9 +159,11 @@ public class MovieWindowViewController implements Initializable {
         if (txtName.getText().trim().isEmpty()) {
             errors.append("Name is required.\n");
         }
-        if(txtCategory.getText().trim().isEmpty()) {
-            errors.append("Category is required.\n");
+
+        if (lstCategories.getSelectionModel().getSelectedItems().isEmpty()) {
+            errors.append("At least one category must be selected.\n");
         }
+
         if (txtImdbRating.getText().trim().isEmpty()) {
             errors.append("IMDB Rating is required.\n");
         } else {
@@ -160,7 +176,8 @@ public class MovieWindowViewController implements Initializable {
                 errors.append("IMDB Rating must be a valid number.\n");
             }
         }
-        if(txtPersonalRating.getText().trim().isEmpty()) {
+
+        if (txtPersonalRating.getText().trim().isEmpty()) {
             errors.append("Personal Rating is required.\n");
         } else {
             try {
@@ -193,6 +210,7 @@ public class MovieWindowViewController implements Initializable {
         lblError.setVisible(false);
         return true;
     }
+
     @FXML
     private void handleCancel(ActionEvent actionEvent) {
         saveClicked = false;
@@ -205,40 +223,49 @@ public class MovieWindowViewController implements Initializable {
         if (movie != null) {
             lblName.setText("Edit Movie");
             txtName.setText(movie.getName());
-            txtCategory.setText(movie.getCategory());
             txtImdbRating.setText(String.valueOf(movie.getImdbRating()));
             txtPersonalRating.setText(String.valueOf(movie.getPersonalRating()));
             txtFileLink.setText(movie.getFileLink());
+
+            // Select the movie's categories in the list
+            if (movie.getCategories() != null) {
+                for (Category category : movie.getCategories()) {
+                    for (int i = 0; i < lstCategories.getItems().size(); i++) {
+                        if (lstCategories.getItems().get(i).getId() == category.getId()) {
+                            lstCategories.getSelectionModel().select(i);
+                            break;
+                        }
+                    }
+                }
+            }
 
         } else {
             lblName.setText("New Movie");
         }
     }
-private boolean isFileInDataFolder(File file) {
-    try {
-        String filePath = file.getCanonicalPath();
-        String dataPath = dataDirectory.getCanonicalPath();
-        return filePath.startsWith(dataPath);
-    } catch (IOException e) {
-        return false;
-    }
-}
 
-
-private String getRelativePath(File file) {
-    try {
-        String filePath = file.getCanonicalPath();
-        String dataPath = dataDirectory.getCanonicalPath();
-
-        if (filePath.startsWith(dataPath)) {
-            // Return path relative to project root (includes "data/")
-            return Paths.get("").toAbsolutePath().relativize(file.toPath()).toString();
+    private boolean isFileInDataFolder(File file) {
+        try {
+            String filePath = file.getCanonicalPath();
+            String dataPath = dataDirectory.getCanonicalPath();
+            return filePath.startsWith(dataPath);
+        } catch (IOException e) {
+            return false;
         }
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-    return file.getAbsolutePath();
 
-}
+    private String getRelativePath(File file) {
+        try {
+            String filePath = file.getCanonicalPath();
+            String dataPath = dataDirectory.getCanonicalPath();
 
+            if (filePath.startsWith(dataPath)) {
+                // Return path relative to project root (includes "data/")
+                return Paths.get("").toAbsolutePath().relativize(file.toPath()).toString();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return file.getAbsolutePath();
+    }
 }

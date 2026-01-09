@@ -1,5 +1,6 @@
 package com.example.MovieExam.BLL;
 
+import com.example.MovieExam.BE.Category;
 import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.DAL.DataAccess.MovieDAO;
 import com.example.MovieExam.DAL.Interfaces.IMovieDA;
@@ -28,27 +29,24 @@ public class MovieManager {
     }
 
     /**
-     * Create a new movie after validating input and file location
-     *
+     * Create a new movie with validation
      * @param name
-     * @param category
+     * @param categories
      * @param imdbRating
      * @param personalRating
      * @param filelink
      * @return
      * @throws Exception
      */
-    public Movie createMovie(String name, String category, double imdbRating, double personalRating, String filelink) throws Exception {
+    public Movie createMovie(String name, List<Category> categories, double imdbRating, double personalRating, String filelink) throws Exception {
         // Validation
-        validateMovieInput(name, category, imdbRating, personalRating, filelink);
-
+        validateMovieInput(name, categories, imdbRating, personalRating, filelink);
 
         // Check if file exists
         File file = new File(filelink);
         if (!file.exists()) {
             throw new IllegalArgumentException("File does not exist: " + filelink);
         }
-
 
         // Validate file is in data folder
         if (!isFileInDataFolder(file)) {
@@ -61,16 +59,17 @@ public class MovieManager {
             throw new IllegalArgumentException("Only MP4 and MPEG4 files are supported");
         }
 
-        Movie movie = new Movie(name, category, imdbRating, personalRating, filelink);
+        Movie movie = new Movie(name, categories, imdbRating, personalRating, filelink);
         return movieDAO.createMovie(movie);
     }
 
     public void deleteMovie(int movieId) throws Exception {
         if (movieId <= 0) {
-            throw new IllegalArgumentException("Invalid song ID");
+            throw new IllegalArgumentException("Invalid movie ID");
         }
         movieDAO.deleteMovie(movieId);
     }
+
     public Movie getMovieById(int id) throws Exception {
         return movieDAO.getMovieById(id);
     }
@@ -95,7 +94,7 @@ public class MovieManager {
     }
 
     /**
-     * Check if the file is located within the data folder
+     * Check if file is located within the data folder
      * @param file
      * @return
      * @throws IOException
@@ -115,20 +114,19 @@ public class MovieManager {
 
     /**
      * Validate movie input fields
-     *
      * @param name
-     * @param category
+     * @param categories
      * @param imdbRating
      * @param personalRating
      * @param fileLink
      * @throws IllegalArgumentException
      */
-    public void validateMovieInput(String name, String category, double imdbRating, double personalRating, String fileLink) throws IllegalArgumentException {
+    public void validateMovieInput(String name, List<Category> categories, double imdbRating, double personalRating, String fileLink) throws IllegalArgumentException {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Movie name cannot be empty");
         }
-        if (category == null || category.trim().isEmpty()) {
-            throw new IllegalArgumentException("Category cannot be empty");
+        if (categories == null || categories.isEmpty()) {
+            throw new IllegalArgumentException("At least one category must be selected");
         }
         if (imdbRating < 0 || imdbRating > 10) {
             throw new IllegalArgumentException("IMDB rating must be between 0 and 10");
@@ -162,8 +160,8 @@ public class MovieManager {
         return new File(DATA_FOLDER).getAbsolutePath();
     }
 
-    public Movie searchMovies(String query) {
+    public List<Movie> searchMovies(String query) {
+        // TODO: Implement search functionality
         return null;
     }
-
 }
