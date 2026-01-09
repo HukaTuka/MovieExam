@@ -10,6 +10,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -32,6 +33,7 @@ public class MediaController {
     private Label lblCurrentTime;
 
     private MediaPlayer mediaPlayer;
+    private Stage stage;
 
     @FXML
     public void initialize() {
@@ -149,5 +151,10 @@ public class MediaController {
             lblCurrentTime.setText("0:00");
             sldProgress.setValue(0);
         }
+    }
+
+    // Method to set the stage for resizing
+    public void setStageForResize(Stage stage) {
+        this.stage = stage;
     }
 }
