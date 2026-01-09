@@ -43,7 +43,7 @@ public class MediaController {
         });
     }
 
-    public void playVideo(String filePath) {
+    public void playVideo(String fileLink) {
         try {
             // Stop any currently playing video
             if (mediaPlayer != null) {
@@ -51,10 +51,10 @@ public class MediaController {
                 mediaPlayer.dispose();
             }
 
-            File file = new File(filePath);
+            File file = new File(fileLink);
 
             if (!file.exists()) {
-                System.out.println("File does not exist: " + filePath);
+                System.out.println("File does not exist: " + fileLink);
                 return;
             }
 
@@ -89,7 +89,7 @@ public class MediaController {
             mediaPlayer.play();
             btnPlayPause.setText("⏸");
 
-            System.out.println("Playing: " + filePath);
+            System.out.println("Playing: " + fileLink);
 
         } catch (Exception e) {
             e.printStackTrace();

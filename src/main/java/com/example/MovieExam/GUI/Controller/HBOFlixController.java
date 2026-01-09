@@ -145,15 +145,33 @@ public class HBOFlixController implements Initializable {
                 movieModel.updateMovie(selectedMovie);
                 refreshMovieList();
 
-                // TODO: Open media player with the movie file
-                //movieModel.playMovie(selectedMovie);
-                openMediaWindow(null);
+                // Open media player with the movie file
+                openMediaWindow(selectedMovie);
 
             } catch (Exception e) {
                 showError("Error", "Failed to open movie: " + e.getMessage());
             }
         } else {
             showError("No Selection", "Please select a movie to watch");
+        }
+    }
+
+    public void openMediaWindow(Movie movie) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/MediaView.fxml"));
+        Parent root = fxmlLoader.load();
+
+        // Get the MediaController
+        MediaController mediaController = fxmlLoader.getController();
+
+        // Create and show the stage
+        Stage stage = new Stage();
+        stage.setTitle(movie != null ? "Playing: " + movie.getName() : "MediaView");
+        stage.setScene(new Scene(root));
+        stage.show();
+
+        // Play the movie if one was selected
+        if (movie != null && movie.getFileLink() != null) {
+            mediaController.playVideo(movie.getFileLink());
         }
     }
     public void openMovieWindow(Movie movie) {
