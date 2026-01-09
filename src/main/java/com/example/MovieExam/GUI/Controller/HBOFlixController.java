@@ -172,6 +172,8 @@ public class HBOFlixController implements Initializable {
         // Play the movie if one was selected
         if (movie != null && movie.getFileLink() != null) {
             mediaController.playVideo(movie.getFileLink());
+            // Resize window to video dimensions once media is ready
+            mediaController.setStageForResize(stage);
         }
     }
     public void openMovieWindow(Movie movie) {
