@@ -1,14 +1,13 @@
 package com.example.MovieExam.GUI.Model;
 
-//Project imports
+import com.example.MovieExam.BE.Category;
 import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.BLL.MovieManager;
 
-
-//Java imports
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
 
 public class MovieModel {
 
@@ -30,8 +29,8 @@ public class MovieModel {
         moviesToBeViewed.addAll(movieManager.getAllMovies());
     }
 
-    public void createMovie(String name, String category, double imdbRating, double personalRating, String fileLink) throws Exception {
-        movieManager.createMovie(name, category, imdbRating, personalRating, fileLink);
+    public void createMovie(String name, List<Category> categories, double imdbRating, double personalRating, String fileLink) throws Exception {
+        movieManager.createMovie(name, categories, imdbRating, personalRating, fileLink);
         loadAllMovies();
     }
 
@@ -45,16 +44,17 @@ public class MovieModel {
         loadAllMovies();
     }
 
-
     public void searchMovies(String query) throws Exception {
         if (query == null || query.trim().isEmpty()) {
             loadAllMovies();
         } else {
             moviesToBeViewed.clear();
-            moviesToBeViewed.addAll(movieManager.searchMovies(query));
+            List<Movie> results = movieManager.searchMovies(query);
+            if (results != null) {
+                moviesToBeViewed.addAll(results);
+            }
         }
     }
-
 
     public Movie getMovieById(int id) throws Exception {
         return movieManager.getMovieById(id);

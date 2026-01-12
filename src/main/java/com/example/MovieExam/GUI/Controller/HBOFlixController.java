@@ -2,6 +2,7 @@ package com.example.MovieExam.GUI.Controller;
 
 import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.GUI.Model.MovieModel;
+import com.example.MovieExam.GUI.Model.CategoryModel;
 import com.example.MovieExam.Main;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,11 +14,11 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.time.format.DateTimeFormatter;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -29,20 +30,21 @@ public class HBOFlixController implements Initializable {
     @FXML private TableColumn<Movie, Double> colPersonalRating;
     @FXML private TableColumn<Movie, LocalDateTime> colLastViewed;
     @FXML private Label welcomeText;
-    private MovieModel movieModel;
 
+    private MovieModel movieModel;
+    private CategoryModel categoryModel;
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle){
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         try {
             movieModel = new MovieModel();
+            categoryModel = new CategoryModel();
 
             // Setup table columns
             setupTableColumns();
 
             // Bind the table to the observable list
             tblMovies.setItems(movieModel.getObservableMovies());
-
 
             refreshMovieList();
 
@@ -54,7 +56,13 @@ public class HBOFlixController implements Initializable {
 
     private void setupTableColumns() {
         colMovieName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+        // display categories as comma-separated string
+        colCategory.setCellValueFactory(cellData -> {
+            Movie movie = cellData.getValue();
+            return new javafx.beans.property.SimpleStringProperty(movie.getCategoriesAsString());
+        });
+
         coIMDBRating.setCellValueFactory(new PropertyValueFactory<>("imdbRating"));
         colPersonalRating.setCellValueFactory(new PropertyValueFactory<>("personalRating"));
         colLastViewed.setCellValueFactory(new PropertyValueFactory<>("lastViewed"));
@@ -81,15 +89,17 @@ public class HBOFlixController implements Initializable {
         }
     }
 
-
     public void btnAddNewC(ActionEvent actionEvent) throws IOException {
         openCategoryWindow(null);
+        refreshMovieList(); // Refresh in case categories were added
     }
 
     public void btnEditC(ActionEvent actionEvent) {
+        // TODO: Implement category editing
     }
 
     public void btnDeleteC(ActionEvent actionEvent) {
+        // TODO: Implement category deletion
     }
 
     public void btnNewMovie(ActionEvent actionEvent) {
@@ -177,14 +187,15 @@ public class HBOFlixController implements Initializable {
             mediaController.setStageForResize(stage);
         }
     }
+
     public void openMovieWindow(Movie movie) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/MovieExam/Views/MovieWindowView.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/MovieExam/Views/MovieWindowView.fxml"));
             Parent root = loader.load();
 
             MovieWindowViewController controller = loader.getController();
             controller.setMovieModel(movieModel);
+            controller.setCategoryModel(categoryModel);
             controller.setMovie(movie);
 
             Stage stage = new Stage();
@@ -193,19 +204,28 @@ public class HBOFlixController implements Initializable {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
 
+            refreshMovieList();
+
         } catch (IOException ex) {
             showError("Error", "Failed to open movie window: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
-    public void openCategoryWindow (ActionEvent actionEvent) throws IOException {
+    public void openCategoryWindow(ActionEvent actionEvent) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/com/example/MovieExam/Views/CatCreationWindowView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
         stage.setTitle("Category Creation");
         stage.setScene(scene);
-        stage.show();
+        stage.showAndWait();
+
+        // Refresh category list after window closes
+        try {
+            categoryModel.loadAllCategories();
+        } catch (Exception e) {
+            showError("Error", "Failed to reload categories: " + e.getMessage());
+        }
     }
 
     private void showError(String title, String message) {
@@ -215,14 +235,16 @@ public class HBOFlixController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
     private void showWarning(String title, String message) {
-    Alert alert = new Alert(Alert.AlertType.WARNING);
-    alert.setTitle(title);
-    alert.setHeaderText(null);
-    alert.setContentText(message);
-    alert.showAndWait();
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
-    public void openMediaWindow(ActionEvent actionEvent) throws IOException{
+
+    public void openMediaWindow(ActionEvent actionEvent) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/MediaView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
