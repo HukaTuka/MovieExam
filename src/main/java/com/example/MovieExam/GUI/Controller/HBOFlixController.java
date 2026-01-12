@@ -11,10 +11,13 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Label;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -22,7 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class HBOFlixController implements Initializable {
+public class HBOFlixController extends Component implements Initializable {
     @FXML private TableView<Movie> tblMovies;
     @FXML private TableColumn<Movie, String> colMovieName;
     @FXML private TableColumn<Movie, String> colCategory;
@@ -42,7 +45,8 @@ public class HBOFlixController implements Initializable {
 
             // Setup table columns
             setupTableColumns();
-
+            //Show Start Up Warning
+            showStartupWarning();
             // Bind the table to the observable list
             tblMovies.setItems(movieModel.getObservableMovies());
 
@@ -166,7 +170,21 @@ public class HBOFlixController implements Initializable {
             showError("No Selection", "Please select a movie to watch");
         }
     }
+    //Show a Warning at the start of the application that reminds people to remove movies that fit some criteria
+    private void showStartupWarning() {
+        String warningMessage = "⚠️ REMINDER ⚠️\n\n" +
+                "Please remember to delete movies that meet BOTH criteria:\n" +
+                "• Personal rating under 6\n" +
+                "• Not opened from this application in more than 2 years\n\n" +
+                "This helps keep your collection relevant and manageable.";
 
+        JOptionPane.showMessageDialog(
+                this,
+                warningMessage,
+                "Maintenance Reminder",
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
     public void openMediaWindow(Movie movie) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/MediaView.fxml"));
         Parent root = fxmlLoader.load();
