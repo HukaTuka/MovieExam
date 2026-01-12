@@ -1,5 +1,6 @@
 package com.example.MovieExam.GUI.Controller;
 
+import com.example.MovieExam.BE.Category;
 import com.example.MovieExam.BE.Movie;
 import com.example.MovieExam.GUI.Model.MovieModel;
 import com.example.MovieExam.GUI.Model.CategoryModel;
@@ -32,10 +33,13 @@ public class HBOFlixController extends Component implements Initializable {
     @FXML private TableColumn<Movie, Double> coIMDBRating;
     @FXML private TableColumn<Movie, Double> colPersonalRating;
     @FXML private TableColumn<Movie, LocalDateTime> colLastViewed;
-    @FXML private Label welcomeText;
+    @FXML private TableView<Category> tblCategories;
+    @FXML private TableColumn<Category, String> lstCat;
 
     private MovieModel movieModel;
     private CategoryModel categoryModel;
+
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -49,8 +53,10 @@ public class HBOFlixController extends Component implements Initializable {
             showStartupWarning();
             // Bind the table to the observable list
             tblMovies.setItems(movieModel.getObservableMovies());
+            tblCategories.setItems(categoryModel.getObservableCategories());
 
             refreshMovieList();
+            refreshCategoryList();
 
         } catch (Exception e) {
             showError("Initialization Error", "Failed to initialize application: " + e.getMessage());
@@ -70,6 +76,9 @@ public class HBOFlixController extends Component implements Initializable {
         coIMDBRating.setCellValueFactory(new PropertyValueFactory<>("imdbRating"));
         colPersonalRating.setCellValueFactory(new PropertyValueFactory<>("personalRating"));
         colLastViewed.setCellValueFactory(new PropertyValueFactory<>("lastViewed"));
+
+        //sets up the categories
+        lstCat.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         // Format lastViewed column to proper date-time format
         colLastViewed.setCellFactory(column -> new TableCell<Movie, LocalDateTime>() {
@@ -93,23 +102,63 @@ public class HBOFlixController extends Component implements Initializable {
         }
     }
 
+    private void refreshCategoryList() {
+        try {
+            categoryModel.loadAllCategories();;
+        } catch (Exception e) {
+            showError("Error", "Failed to load categories: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     public void btnAddNewC(ActionEvent actionEvent) throws IOException {
         openCategoryWindow(null);
         refreshMovieList(); // Refresh in case categories were added
     }
 
-    public void btnEditC(ActionEvent actionEvent) {
-        // TODO: Implement category editing
+    public void btnEditC(ActionEvent actionEvent) throws IOException {
+        Category selected = tblCategories.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("No Selection", "Please select a movie to edit");
+            return;
+        }
+        openCategoryWindow(selected);
     }
 
     public void btnDeleteC(ActionEvent actionEvent) {
-        // TODO: Implement category deletion
+        Category selected = tblCategories.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("No Selection", "Please select a category to delete");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Deletion");
+        confirm.setHeaderText("Delete Movie");
+        confirm.setContentText("Delete: " + selected.getName() + "?");
+
+        ButtonType deleteLibrary = new ButtonType("Library Only");
+        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        confirm.getButtonTypes().setAll(deleteLibrary, cancel);
+
+        Optional<ButtonType> result = confirm.showAndWait();
+
+        try {
+            if (result.isPresent() && result.get() == deleteLibrary) {
+                categoryModel.deleteCategory(selected, false);
+            }
+            refreshMovieList();
+        } catch (Exception ex) {
+            showError("Error", "Failed to delete movie: " + ex.getMessage());
+        }
     }
 
     public void btnNewMovie(ActionEvent actionEvent) {
         openMovieWindow(null);
         refreshMovieList();
     }
+
 
     public void btnEditMovie(ActionEvent actionEvent) {
         Movie selected = tblMovies.getSelectionModel().getSelectedItem();
@@ -230,19 +279,26 @@ public class HBOFlixController extends Component implements Initializable {
         }
     }
 
-    public void openCategoryWindow(ActionEvent actionEvent) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/com/example/MovieExam/Views/CatCreationWindowView.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
-        Stage stage = new Stage();
-        stage.setTitle("Category Creation");
-        stage.setScene(scene);
-        stage.showAndWait();
-
-        // Refresh category list after window closes
+    public void openCategoryWindow(Category category){
         try {
-            categoryModel.loadAllCategories();
-        } catch (Exception e) {
-            showError("Error", "Failed to reload categories: " + e.getMessage());
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/MovieExam/Views/CatCreationWindowView.fxml"));
+            Parent root = loader.load();
+
+            CatCreationWindowViewController controller = loader.getController();
+            controller.setCategoryModel(categoryModel);
+            controller.setCategory(category);
+
+            Stage stage = new Stage();
+            stage.setTitle(category == null ? "New Category" : "Edit Category");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            refreshCategoryList();
+
+        } catch (IOException ex) {
+            showError("Error", "Failed to open category window: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
