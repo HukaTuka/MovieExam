@@ -219,21 +219,19 @@ public class HBOFlixController extends Component implements Initializable {
             showError("No Selection", "Please select a movie to watch");
         }
     }
-    //Show a Warning at the start of the application that reminds people to remove movies that fit some criteria
     private void showStartupWarning() {
-        String warningMessage = "⚠️ REMINDER ⚠️\n\n" +
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Maintenance Reminder");
+        alert.setHeaderText("⚠️ REMINDER ⚠️");
+        alert.setContentText(
                 "Please remember to delete movies that meet BOTH criteria:\n" +
-                "• Personal rating under 6\n" +
-                "• Not opened from this application in more than 2 years\n\n" +
-                "This helps keep your collection relevant and manageable.";
-
-        JOptionPane.showMessageDialog(
-                this,
-                warningMessage,
-                "Maintenance Reminder",
-                JOptionPane.WARNING_MESSAGE
+                        "• Personal rating under 6\n" +
+                        "• Not opened from this application in more than 2 years\n\n" +
+                        "This helps keep your collection relevant and manageable."
         );
+        alert.showAndWait();
     }
+
     public void openMediaWindow(Movie movie) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/MediaView.fxml"));
         Parent root = fxmlLoader.load();
