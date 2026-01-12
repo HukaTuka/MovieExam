@@ -139,7 +139,7 @@ public class MediaController {
 
     @FXML
     public void btnSkip(ActionEvent actionEvent) {
-        // Logic to play next video from your list
+        // Logic to play next video from list
         System.out.println("Skip button clicked");
     }
 
