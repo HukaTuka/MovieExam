@@ -5,12 +5,10 @@ import com.example.MovieExam.GUI.Model.CategoryModel;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -42,7 +40,18 @@ public class CatCreationWindowViewController implements Initializable {
         }
     }
 
+    public void setCategoryModel(CategoryModel model) {
+        this.categoryModel = model;
+    }
 
+    public void setCategory(Category category) {
+        this.categoryToEdit = category;
+
+        if (category != null) {
+            txtCategory.setText(category.getName());
+
+        }
+    }
 
     private boolean allowedInput() {
         StringBuilder errors = new StringBuilder();
@@ -58,37 +67,33 @@ public class CatCreationWindowViewController implements Initializable {
     }
 
 
-    public void setCategoryModel(CategoryModel model) {
-        this.categoryModel = model;
-    }
-
     public void btnCreateCtgClick(ActionEvent actionEvent) {
         if (allowedInput()) {
             try {
                 String name = txtCategory.getText().trim();
-
-
                 if (categoryToEdit != null) {
-                    // Edit existing movie
+                    // Edit existing category
                     categoryToEdit.setName(name);
-
 
                     categoryModel.updateCategory(categoryToEdit);
                 } else {
-                    // Create new movie
+                    // Create new Category
                     categoryModel.createCategory(name);
                 }
-
                 saveClicked = true;
-
+                closeWindow();
 
             } catch (Exception e) {
+
             }
         }
+        closeWindow();
+    }
 
+    @FXML
+    private void closeWindow() {
         Stage stage = (Stage) txtCategory.getScene().getWindow();
         stage.close();
     }
-
-
 }
+

@@ -83,10 +83,6 @@ public class MovieWindowViewController implements Initializable {
         stage.close();
     }
 
-    public boolean isSaveClicked() {
-        return saveClicked;
-    }
-
     @FXML
     private void handleBrowse(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();

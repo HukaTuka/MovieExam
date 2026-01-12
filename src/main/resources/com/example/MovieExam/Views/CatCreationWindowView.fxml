@@ -20,7 +20,7 @@
                </children>
             </VBox>
             <VBox alignment="TOP_CENTER" prefHeight="17.0" prefWidth="334.0" />
-            <Button fx:id="btnCreateCtg" mnemonicParsing="false" onAction="#btnCreateCtgClick" prefHeight="26.0" prefWidth="181.0" text="Create category" />
+            <Button fx:id="btnCreateCtg" mnemonicParsing="false" onAction="#btnCreateCtgClick" prefHeight="26.0" prefWidth="181.0" text="Save" />
             <CubicCurve controlX1="-68.80169677734375" controlX2="61.59872055053711" controlY1="62.59833908081055" controlY2="70.59733581542969" endX="150.0" startX="-150.0" stroke="BLACK" />
          </children>
       </VBox>
