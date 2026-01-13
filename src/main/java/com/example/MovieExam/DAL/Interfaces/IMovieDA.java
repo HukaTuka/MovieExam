@@ -17,4 +17,8 @@ public interface IMovieDA {
 
         Movie getMovieById(int id) throws Exception;
 
+        List<Movie> searchMovies(String query) throws Exception;
+
+        List<Movie> searchMovies(String query, Double minImdbRating, Double minPersonalRating) throws Exception;
+
 }

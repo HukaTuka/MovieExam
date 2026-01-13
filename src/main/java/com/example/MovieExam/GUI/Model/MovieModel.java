@@ -45,11 +45,15 @@ public class MovieModel {
     }
 
     public void searchMovies(String query) throws Exception {
-        if (query == null || query.trim().isEmpty()) {
+        searchMovies(query, null, null);
+    }
+
+    public void searchMovies(String query, Double minImdbRating, Double minPersonalRating) throws Exception {
+        if ((query == null || query.trim().isEmpty()) && minImdbRating == null && minPersonalRating == null) {
             loadAllMovies();
         } else {
             moviesToBeViewed.clear();
-            List<Movie> results = movieManager.searchMovies(query);
+            List<Movie> results = movieManager.searchMovies(query, minImdbRating, minPersonalRating);
             if (results != null) {
                 moviesToBeViewed.addAll(results);
             }

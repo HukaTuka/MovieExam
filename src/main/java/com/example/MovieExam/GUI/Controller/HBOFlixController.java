@@ -12,13 +12,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Label;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -26,7 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class HBOFlixController extends Component implements Initializable {
+public class HBOFlixController implements Initializable {
     @FXML private TableView<Movie> tblMovies;
     @FXML private TableColumn<Movie, String> colMovieName;
     @FXML private TableColumn<Movie, String> colCategory;
@@ -35,6 +34,8 @@ public class HBOFlixController extends Component implements Initializable {
     @FXML private TableColumn<Movie, LocalDateTime> colLastViewed;
     @FXML private TableView<Category> tblCategories;
     @FXML private TableColumn<Category, String> lstCat;
+    @FXML private TextField txtSearch;
+    @FXML private Button btnSearch;
 
     private MovieModel movieModel;
     private CategoryModel categoryModel;
@@ -57,6 +58,9 @@ public class HBOFlixController extends Component implements Initializable {
 
             refreshMovieList();
             refreshCategoryList();
+
+            // Set up search functionality - search on Enter key press
+            txtSearch.setOnAction(e -> performSearch());
 
         } catch (Exception e) {
             showError("Initialization Error", "Failed to initialize application: " + e.getMessage());
@@ -323,5 +327,20 @@ public class HBOFlixController extends Component implements Initializable {
         stage.setTitle("MediaView");
         stage.setScene(scene);
         stage.show();
+    }
+
+    @FXML
+    public void btnSearch(ActionEvent actionEvent) {
+        performSearch();
+    }
+
+    private void performSearch() {
+        try {
+            String query = txtSearch.getText();
+            movieModel.searchMovies(query, null, null);
+        } catch (Exception e) {
+            showError("Search Error", "Failed to perform search: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

@@ -125,7 +125,6 @@ public class DBConnector {
             instance.testConnection();
         }
     }
-
     public static void main(String[] args) throws Exception {
         System.out.println("Testing Database Connection...");
         System.out.println("================================");
@@ -143,4 +142,5 @@ public class DBConnector {
             System.err.println("\nApplication can still run in offline mode.");
         }
     }
+
 }

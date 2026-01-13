@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MovieDAO implements IMovieDA {
 
@@ -249,5 +250,152 @@ public class MovieDAO implements IMovieDA {
             stmt.setInt(1, movieId);
             stmt.executeUpdate();
         }
+    }
+
+    @Override
+    public List<Movie> searchMovies(String query) throws Exception {
+        return searchMovies(query, null, null);
+    }
+
+    @Override
+    public List<Movie> searchMovies(String query, Double minImdbRating, Double minPersonalRating) throws Exception {
+        if (!DBConnector.isConnectionAvailable()) {
+            System.out.println("Database offline - returning empty movie list");
+            return new ArrayList<>();
+        }
+
+        // First, find matching movie IDs
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append("SELECT DISTINCT m.id ");
+        sqlBuilder.append("FROM Movie m ");
+        sqlBuilder.append("LEFT JOIN CatMovie cm ON m.id = cm.movieId ");
+        sqlBuilder.append("LEFT JOIN Category c ON cm.categoryId = c.id ");
+        sqlBuilder.append("WHERE 1=1 ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        if (query != null && !query.trim().isEmpty()) {
+            String trimmedQuery = query.trim();
+            String searchPattern = "%" + trimmedQuery + "%";
+            
+            // Check if query is a number (for rating search)
+            boolean isNumeric = false;
+            try {
+                Double.parseDouble(trimmedQuery);
+                isNumeric = true;
+            } catch (NumberFormatException e) {
+                // Not a number, continue with text search
+            }
+            
+            if (isNumeric) {
+                // Search in name, category, and ratings (partial number match)
+                sqlBuilder.append("AND (m.name LIKE ? OR c.Name LIKE ? OR CAST(m.imdbRating AS VARCHAR) LIKE ? OR CAST(m.personalRating AS VARCHAR) LIKE ?) ");
+                params.add(searchPattern);
+                params.add(searchPattern);
+                params.add(searchPattern);
+                params.add(searchPattern);
+            } else {
+                // Search only in name and category (not in ratings or lastViewed)
+                sqlBuilder.append("AND (m.name LIKE ? OR c.Name LIKE ?) ");
+                params.add(searchPattern);
+                params.add(searchPattern);
+            }
+        }
+        
+        if (minImdbRating != null) {
+            // Use partial number matching (e.g., "7" matches 7.0, 7.3, 7.5, etc., but not 8.7 or 17.0)
+            // Match numbers that start with the entered value
+            String ratingStr = minImdbRating.toString();
+            String ratingPattern = ratingStr + "%";
+            sqlBuilder.append("AND CAST(m.imdbRating AS VARCHAR) LIKE ? ");
+            params.add(ratingPattern);
+        }
+        
+        if (minPersonalRating != null) {
+            // Use partial number matching (e.g., "7" matches 7.0, 7.3, 7.5, etc., but not 8.7 or 17.0)
+            // Match numbers that start with the entered value
+            String ratingStr = minPersonalRating.toString();
+            String ratingPattern = ratingStr + "%";
+            sqlBuilder.append("AND CAST(m.personalRating AS VARCHAR) LIKE ? ");
+            params.add(ratingPattern);
+        }
+
+        // Get matching movie IDs
+        List<Integer> matchingMovieIds = new ArrayList<>();
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sqlBuilder.toString())) {
+            
+            for (int i = 0; i < params.size(); i++) {
+                Object param = params.get(i);
+                if (param instanceof String) {
+                    stmt.setString(i + 1, (String) param);
+                } else if (param instanceof Double) {
+                    stmt.setDouble(i + 1, (Double) param);
+                }
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                matchingMovieIds.add(rs.getInt("id"));
+            }
+        }
+
+        if (matchingMovieIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Now get all movies with ALL their categories
+        Map<Integer, Movie> movieMap = new HashMap<>();
+        String placeholders = matchingMovieIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT m.*, c.id as catId, c.Name as catName " +
+                "FROM Movie m " +
+                "LEFT JOIN CatMovie cm ON m.id = cm.movieId " +
+                "LEFT JOIN Category c ON cm.categoryId = c.id " +
+                "WHERE m.id IN (" + placeholders + ") " +
+                "ORDER BY m.lastViewed DESC";
+
+        try (Connection conn = DBConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < matchingMovieIds.size(); i++) {
+                stmt.setInt(i + 1, matchingMovieIds.get(i));
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int movieId = rs.getInt("id");
+
+                // Get or create movie
+                Movie movie = movieMap.get(movieId);
+                if (movie == null) {
+                    movie = new Movie(
+                            movieId,
+                            rs.getString("name"),
+                            new ArrayList<>(),
+                            rs.getDouble("imdbRating"),
+                            rs.getDouble("personalRating"),
+                            rs.getString("fileLink"),
+                            rs.getTimestamp("lastViewed") != null ?
+                                    rs.getTimestamp("lastViewed").toLocalDateTime() : null
+                    );
+                    movieMap.put(movieId, movie);
+                }
+
+                // Add ALL categories for the movie
+                int catId = rs.getInt("catId");
+                if (!rs.wasNull()) {
+                    String catName = rs.getString("catName");
+                    if (catName != null && !movie.getCategories().stream()
+                            .anyMatch(cat -> cat.getId() == catId)) {
+                        movie.getCategories().add(new Category(catId, catName));
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw new Exception("Could not search movies from database: " + ex.getMessage(), ex);
+        }
+
+        return new ArrayList<>(movieMap.values());
     }
 }

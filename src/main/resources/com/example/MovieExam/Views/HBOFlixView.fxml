@@ -49,6 +49,7 @@
                   <HBox spacing="5">
                       <children>
                           <TextField fx:id="txtSearch" promptText="Search by title or category..." HBox.hgrow="ALWAYS" />
+                          <Button fx:id="btnSearch" onAction="#btnSearch" text="Search" />
                       </children>
                   </HBox>
                   <TableView fx:id="tblMovies" prefHeight="571.0" prefWidth="530.0" VBox.vgrow="ALWAYS">
@@ -74,7 +75,10 @@
        </HBox>
    </center>
    <bottom>
-      <VBox spacing="5" style="-fx-background-color: #f0f0f0; -fx-padding: 10;">
+      <VBox spacing="5">
+         <padding>
+            <Insets bottom="10" left="10" right="10" top="10" />
+         </padding>
          <children>
             <HBox alignment="CENTER_LEFT" spacing="5" />
          </children>

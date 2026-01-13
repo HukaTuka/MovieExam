@@ -160,8 +160,28 @@ public class MovieManager {
         return new File(DATA_FOLDER).getAbsolutePath();
     }
 
-    public List<Movie> searchMovies(String query) {
-        // TODO: Implement search functionality
-        return null;
+    /**
+     * Search movies by title or category name
+     * @param query Search query (can be partial match)
+     * @return List of movies matching the search criteria
+     * @throws Exception
+     */
+    public List<Movie> searchMovies(String query) throws Exception {
+        return searchMovies(query, null, null);
+    }
+
+    /**
+     * Search movies by title or category name with rating filters
+     * @param query Search query (can be partial match)
+     * @param minImdbRating Minimum IMDB rating (null to ignore)
+     * @param minPersonalRating Minimum personal rating (null to ignore)
+     * @return List of movies matching the search criteria
+     * @throws Exception
+     */
+    public List<Movie> searchMovies(String query, Double minImdbRating, Double minPersonalRating) throws Exception {
+        if ((query == null || query.trim().isEmpty()) && minImdbRating == null && minPersonalRating == null) {
+            return getAllMovies();
+        }
+        return movieDAO.searchMovies(query != null ? query.trim() : null, minImdbRating, minPersonalRating);
     }
 }
