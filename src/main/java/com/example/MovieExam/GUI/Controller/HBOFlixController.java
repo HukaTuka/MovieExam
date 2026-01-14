@@ -223,6 +223,7 @@ public class HBOFlixController implements Initializable {
             showError("No Selection", "Please select a movie to watch");
         }
     }
+
     private void showStartupWarning() {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Maintenance Reminder");
@@ -318,15 +319,6 @@ public class HBOFlixController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    public void openMediaWindow(ActionEvent actionEvent) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("views/MediaView.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
-        Stage stage = new Stage();
-        stage.setTitle("MediaView");
-        stage.setScene(scene);
-        stage.show();
     }
 
     @FXML
