@@ -38,8 +38,4 @@ public class CategoryModel {
         categoryManager.deleteCategory(category.getId(), deleteFile);
         loadAllCategories();
     }
-
-    public Category getCategoryById(int id) throws Exception {
-        return categoryManager.getCategoryById(id);
-    }
 }
