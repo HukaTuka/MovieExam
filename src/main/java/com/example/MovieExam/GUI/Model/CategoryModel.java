@@ -39,8 +39,6 @@ public class CategoryModel {
         loadAllCategories();
     }
 
-
-
     public Category getCategoryById(int id) throws Exception {
         return categoryManager.getCategoryById(id);
     }

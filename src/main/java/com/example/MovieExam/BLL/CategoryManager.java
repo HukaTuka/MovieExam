@@ -27,7 +27,7 @@ public class CategoryManager {
     }
 
     /**
-     * Create a new movie after validating input and file location
+     * Create a new Category after validating input and file location
      *
      * @throws Exception
      */
@@ -58,7 +58,7 @@ public class CategoryManager {
     }
 
     /**
-     * Validate movie input fields
+     * Validate category input fields
      *
      * @param name
      * @throws IllegalArgumentException
