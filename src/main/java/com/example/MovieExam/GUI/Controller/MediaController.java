@@ -102,7 +102,6 @@ public class MediaController {
     private void updateProgress() {
         if (mediaPlayer != null && !sldProgress.isValueChanging()) {
             Duration currentTime = mediaPlayer.getCurrentTime();
-            Duration totalDuration = mediaPlayer.getTotalDuration();
 
             // Update progress slider
             sldProgress.setValue(currentTime.toSeconds());
